@@ -1,10 +1,11 @@
-# User Registration Backend with Drizzle ORM
+# User Registration Backend with Drizzle ORM & JWT Authentication
 
-A simple NestJS backend for user registration with PostgreSQL (Neon) database using Drizzle ORM.
+A complete NestJS backend for user registration and authentication with PostgreSQL (Neon) database using Drizzle ORM and JWT.
 
 ## Features
 
 - ✅ User registration with email and password
+- ✅ User login with JWT authentication
 - ✅ Password hashing with bcrypt
 - ✅ Input validation with class-validator
 - ✅ Unique email constraint
@@ -16,12 +17,14 @@ A simple NestJS backend for user registration with PostgreSQL (Neon) database us
 ## Setup
 
 1. **Install dependencies:**
+
    ```bash
    npm install
    ```
 
 2. **Environment configuration:**
    Update the `.env` file with your Neon PostgreSQL database URL:
+
    ```env
    DATABASE_URL=your_neon_postgres_database_url_here
    JWT_SECRET=your_jwt_secret_here
@@ -29,20 +32,22 @@ A simple NestJS backend for user registration with PostgreSQL (Neon) database us
    ```
 
 3. **Database setup:**
+
    ```bash
    # Push schema to database (creates tables)
    npm run db:push
-   
+
    # Or generate and run migrations
    npm run db:generate
    npm run db:migrate
    ```
 
 4. **Run the application:**
+
    ```bash
    # Development
    npm run start:dev
-   
+
    # Production
    npm run build
    npm run start:prod
@@ -62,6 +67,7 @@ A simple NestJS backend for user registration with PostgreSQL (Neon) database us
 Register a new user.
 
 **Request body:**
+
 ```json
 {
   "email": "user@example.com",
@@ -70,6 +76,7 @@ Register a new user.
 ```
 
 **Success Response (201):**
+
 ```json
 {
   "message": "User registered successfully",
@@ -84,16 +91,21 @@ Register a new user.
 **Error Responses:**
 
 - **400 Bad Request** (Validation errors):
+
 ```json
 {
   "statusCode": 400,
   "timestamp": "2025-11-23T10:00:00.000Z",
   "path": "/user/register",
-  "message": ["Please provide a valid email address", "Password must be at least 6 characters long"]
+  "message": [
+    "Please provide a valid email address",
+    "Password must be at least 6 characters long"
+  ]
 }
 ```
 
 - **409 Conflict** (Email already exists):
+
 ```json
 {
   "statusCode": 409,
@@ -106,6 +118,7 @@ Register a new user.
 ## Database Schema
 
 **Users Table (PostgreSQL):**
+
 ```sql
 CREATE TABLE "users" (
   "id" serial PRIMARY KEY,
@@ -154,11 +167,13 @@ src/
 ## Testing
 
 Test the API using the included test file:
+
 ```bash
 node test-drizzle-api.mjs
 ```
 
 Or use curl/Postman:
+
 ```bash
 curl -X POST http://localhost:3000/user/register \
   -H "Content-Type: application/json" \
