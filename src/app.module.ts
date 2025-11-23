@@ -1,29 +1,16 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
-import { User } from './user/entities/user.entity';
+import { DrizzleModule } from './db/drizzle.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        url: configService.get('DATABASE_URL'),
-        entities: [User],
-        synchronize: true, // Set to false in production
-        ssl: {
-          rejectUnauthorized: false, // For Neon PostgreSQL
-        },
-      }),
-      inject: [ConfigService],
-    }),
+    DrizzleModule,
     UserModule,
   ],
   controllers: [AppController],

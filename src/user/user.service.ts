@@ -2,30 +2,31 @@ import {
   Injectable,
   ConflictException,
   InternalServerErrorException,
+  Inject,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { eq } from 'drizzle-orm';
+import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as bcrypt from 'bcryptjs';
-import { User } from './entities/user.entity';
+import { users, User, NewUser } from '../db/schema';
+import { DRIZZLE } from '../db/drizzle.module';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 
 @Injectable()
 export class UserService {
-  constructor(
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
-  ) {}
+  constructor(@Inject(DRIZZLE) private db: NodePgDatabase<any>) {}
 
   async create(createUserDto: CreateUserDto): Promise<UserResponseDto> {
     const { email, password } = createUserDto;
 
     // Check if user already exists
-    const existingUser = await this.userRepository.findOne({
-      where: { email },
-    });
+    const existingUser = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
 
-    if (existingUser) {
+    if (existingUser.length > 0) {
       throw new ConflictException('User with this email already exists');
     }
 
@@ -35,12 +36,15 @@ export class UserService {
       const hashedPassword = await bcrypt.hash(password, saltRounds);
 
       // Create new user
-      const user = this.userRepository.create({
+      const newUser: NewUser = {
         email,
         password: hashedPassword,
-      });
+      };
 
-      const savedUser = await this.userRepository.save(user);
+      const [savedUser] = await this.db
+        .insert(users)
+        .values(newUser)
+        .returning();
 
       // Return user data without password
       return new UserResponseDto(savedUser);
@@ -50,6 +54,12 @@ export class UserService {
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { email } });
+    const result = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+
+    return result.length > 0 ? result[0] : null;
   }
 }
